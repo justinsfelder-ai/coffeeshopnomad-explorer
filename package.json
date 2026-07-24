@@ -1,0 +1,9 @@
+{
+  "name": "coffeeshopnomad-explorer",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Public read-only query page for CoffeeShopNomad visit data.",
+  "engines": {
+    "node": ">=18"
+  }
+}

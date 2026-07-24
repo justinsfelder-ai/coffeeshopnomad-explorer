@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CoffeeShopNomad — Visit Explorer</title>
+<meta name="description" content="A queryable public record of coffee shops visited, by city, neighborhood, and year." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #1B140F;
+    --surface: #241B14;
+    --surface-raised: #2C2118;
+    --rule: #3E3021;
+    --text: #EDE3D3;
+    --text-muted: #A69684;
+    --text-faint: #6E6154;
+    --accent: #C99A44;
+    --accent-dim: #8B6B33;
+    --font-display: 'Fraunces', serif;
+    --font-body: 'IBM Plex Sans', sans-serif;
+    --font-mono: 'IBM Plex Mono', monospace;
+  }
+
+  * { box-sizing: border-box; }
+
+  html { color-scheme: dark; }
+
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+
+  a { color: var(--accent); }
+
+  .wrap {
+    max-width: 920px;
+    margin: 0 auto;
+    padding: 48px 24px 96px;
+  }
+
+  header.page-head {
+    margin-bottom: 40px;
+    border-bottom: 1px solid var(--rule);
+    padding-bottom: 32px;
+  }
+
+  .eyebrow {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin: 0 0 12px;
+  }
+
+  h1 {
+    font-family: var(--font-display);
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-size: clamp(32px, 5vw, 46px);
+    letter-spacing: -0.01em;
+    margin: 0 0 12px;
+    color: var(--text);
+  }
+
+  .lede {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 56ch;
+    margin: 0;
+  }
+
+  .lede code {
+    font-family: var(--font-mono);
+    font-size: 13px;
+    background: var(--surface-raised);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--accent);
+  }
+
+  /* --- Filters --- */
+  .filters {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 12px;
+    margin-bottom: 32px;
+  }
+
+  .field label {
+    display: block;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 6px;
+  }
+
+  select {
+    width: 100%;
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    color: var(--text);
+    font-family: var(--font-body);
+    font-size: 14px;
+    padding: 10px 12px;
+    border-radius: 6px;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23A69684'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    cursor: pointer;
+  }
+
+  select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 1px;
+  }
+
+  .reset-row {
+    grid-column: 1 / -1;
+    display: flex;
+    justify-content: flex-end;
+  }
+
+  button.reset {
+    background: none;
+    border: 1px solid var(--rule);
+    color: var(--text-muted);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    padding: 6px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+  }
+  button.reset:hover { color: var(--text); border-color: var(--text-faint); }
+  button.reset:focus-visible { outline: 2px solid var(--accent); }
+
+  /* --- Signature element: the receipt --- */
+  .receipt {
+    background: var(--surface);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 28px 28px 20px;
+    margin-bottom: 40px;
+    position: relative;
+  }
+
+  .receipt::before {
+    content: "";
+    position: absolute;
+    top: -1px; left: 16px; right: 16px;
+    height: 1px;
+    background-image: linear-gradient(90deg, var(--text-faint) 0 6px, transparent 6px 12px);
+    background-size: 12px 1px;
+    opacity: 0.5;
+  }
+
+  .receipt-title {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin: 0 0 18px;
+  }
+
+  .receipt-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 8px 0;
+    border-bottom: 1px dashed var(--rule);
+    font-family: var(--font-mono);
+  }
+  .receipt-line:last-child { border-bottom: none; }
+
+  .receipt-line .label {
+    font-size: 13px;
+    color: var(--text-muted);
+  }
+
+  .receipt-line .value {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--accent);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* --- Results table --- */
+  .results-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    margin-bottom: 12px;
+  }
+
+  .results-head h2 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    font-size: 20px;
+    margin: 0;
+  }
+
+  .results-count {
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+
+  .table-scroll {
+    overflow-x: auto;
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    min-width: 640px;
+  }
+
+  thead th {
+    text-align: left;
+    font-family: var(--font-mono);
+    font-size: 11px;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    padding: 12px 16px;
+    background: var(--surface);
+    border-bottom: 1px solid var(--rule);
+    position: sticky;
+    top: 0;
+  }
+
+  tbody td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--text);
+  }
+
+  tbody tr:last-child td { border-bottom: none; }
+  tbody tr:hover { background: var(--surface); }
+
+  td.num, th.num { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--text-muted); }
+
+  .empty-state, .loading-state, .error-state {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 14px;
+  }
+
+  .error-state { color: #D98C6B; }
+
+  footer.page-foot {
+    margin-top: 48px;
+    padding-top: 24px;
+    border-top: 1px solid var(--rule);
+    font-family: var(--font-mono);
+    font-size: 12px;
+    color: var(--text-faint);
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <header class="page-head">
+      <p class="eyebrow">CoffeeShopNomad</p>
+      <h1>Visit Explorer</h1>
+      <p class="lede">A public, read-only slice of every coffee shop I've logged a real visit to — filter by <code>country</code>, <code>city</code>, <code>borough</code>, <code>area</code>, or <code>year</code> to explore.</p>
+    </header>
+
+    <section class="filters" id="filters">
+      <div class="field">
+        <label for="f-year">Year</label>
+        <select id="f-year"><option value="">All years</option></select>
+      </div>
+      <div class="field">
+        <label for="f-country">Country</label>
+        <select id="f-country"><option value="">All countries</option></select>
+      </div>
+      <div class="field">
+        <label for="f-city">City</label>
+        <select id="f-city"><option value="">All cities</option></select>
+      </div>
+      <div class="field">
+        <label for="f-borough">Borough</label>
+        <select id="f-borough"><option value="">All boroughs</option></select>
+      </div>
+      <div class="field">
+        <label for="f-area">Area</label>
+        <select id="f-area"><option value="">All areas</option></select>
+      </div>
+      <div class="reset-row">
+        <button class="reset" id="reset-btn" type="button">Reset filters</button>
+      </div>
+    </section>
+
+    <section class="receipt" aria-live="polite">
+      <p class="receipt-title">Summary — filtered</p>
+      <div class="receipt-line">
+        <span class="label">Total visits</span>
+        <span class="value" id="stat-visits">—</span>
+      </div>
+      <div class="receipt-line">
+        <span class="label">Unique coffee shops</span>
+        <span class="value" id="stat-shops">—</span>
+      </div>
+      <div class="receipt-line">
+        <span class="label">Total time spent (hrs)</span>
+        <span class="value" id="stat-hours">—</span>
+      </div>
+    </section>
+
+    <section>
+      <div class="results-head">
+        <h2>Shops</h2>
+        <span class="results-count" id="results-count"></span>
+      </div>
+      <div id="table-container">
+        <div class="loading-state">Loading visit data…</div>
+      </div>
+    </section>
+
+    <footer class="page-foot">
+      Data updates periodically, not in real time. Spend/cost data is intentionally excluded from this view.
+    </footer>
+  </div>
+
+<script>
+(function () {
+  const state = { visits: [], filters: { year: "", country: "", city: "", borough: "", area: "" } };
+
+  const els = {
+    year: document.getElementById("f-year"),
+    country: document.getElementById("f-country"),
+    city: document.getElementById("f-city"),
+    borough: document.getElementById("f-borough"),
+    area: document.getElementById("f-area"),
+    reset: document.getElementById("reset-btn"),
+    statVisits: document.getElementById("stat-visits"),
+    statShops: document.getElementById("stat-shops"),
+    statHours: document.getElementById("stat-hours"),
+    tableContainer: document.getElementById("table-container"),
+    resultsCount: document.getElementById("results-count"),
+  };
+
+  function uniqueSorted(values) {
+    return [...new Set(values.filter(Boolean))].sort((a, b) => String(a).localeCompare(String(b)));
+  }
+
+  function populateSelect(select, values) {
+    values.forEach((v) => {
+      const opt = document.createElement("option");
+      opt.value = v;
+      opt.textContent = v;
+      select.appendChild(opt);
+    });
+  }
+
+  function applyFilters() {
+    return state.visits.filter((v) => {
+      if (state.filters.year && String(v.year) !== state.filters.year) return false;
+      if (state.filters.country && v.country !== state.filters.country) return false;
+      if (state.filters.city && v.city !== state.filters.city) return false;
+      if (state.filters.borough && v.borough !== state.filters.borough) return false;
+      if (state.filters.area && v.area !== state.filters.area) return false;
+      return true;
+    });
+  }
+
+  function renderStats(filtered) {
+    const uniqueShops = new Set(filtered.map((v) => v.shop)).size;
+    const totalHours = filtered.reduce((sum, v) => sum + (v.hours || 0), 0);
+    els.statVisits.textContent = filtered.length.toLocaleString();
+    els.statShops.textContent = uniqueShops.toLocaleString();
+    els.statHours.textContent = totalHours.toLocaleString(undefined, { maximumFractionDigits: 1 });
+  }
+
+  function renderTable(filtered) {
+    els.resultsCount.textContent = filtered.length.toLocaleString() + " visit" + (filtered.length === 1 ? "" : "s");
+
+    if (filtered.length === 0) {
+      els.tableContainer.innerHTML = '<div class="empty-state">No visits match these filters. Try widening your search.</div>';
+      return;
+    }
+
+    // Aggregate to one row per shop within the current filter, sorted by visit count.
+    const byShop = new Map();
+    filtered.forEach((v) => {
+      const key = v.shop;
+      if (!byShop.has(key)) {
+        byShop.set(key, { shop: v.shop, country: v.country, city: v.city, borough: v.borough, area: v.area, visits: 0, hours: 0 });
+      }
+      const entry = byShop.get(key);
+      entry.visits += 1;
+      entry.hours += v.hours || 0;
+    });
+
+    const rows = [...byShop.values()].sort((a, b) => b.visits - a.visits);
+
+    const html = [
+      '<div class="table-scroll"><table>',
+      '<thead><tr><th>Shop</th><th>City</th><th>Borough</th><th>Area</th><th class="num">Visits</th><th class="num">Hours</th></tr></thead>',
+      '<tbody>',
+      ...rows.map((r) => `<tr>
+        <td>${escapeHtml(r.shop)}</td>
+        <td>${escapeHtml(r.city || "—")}</td>
+        <td>${escapeHtml(r.borough || "—")}</td>
+        <td>${escapeHtml(r.area || "—")}</td>
+        <td class="num">${r.visits}</td>
+        <td class="num">${r.hours.toLocaleString(undefined, { maximumFractionDigits: 1 })}</td>
+      </tr>`),
+      '</tbody></table></div>',
+    ].join("");
+
+    els.tableContainer.innerHTML = html;
+  }
+
+  function escapeHtml(str) {
+    const div = document.createElement("div");
+    div.textContent = str;
+    return div.innerHTML;
+  }
+
+  function render() {
+    const filtered = applyFilters();
+    renderStats(filtered);
+    renderTable(filtered);
+  }
+
+  function wireFilters() {
+    [
+      ["year", els.year],
+      ["country", els.country],
+      ["city", els.city],
+      ["borough", els.borough],
+      ["area", els.area],
+    ].forEach(([key, el]) => {
+      el.addEventListener("change", () => {
+        state.filters[key] = el.value;
+        render();
+      });
+    });
+
+    els.reset.addEventListener("click", () => {
+      Object.keys(state.filters).forEach((k) => (state.filters[k] = ""));
+      [els.year, els.country, els.city, els.borough, els.area].forEach((el) => (el.value = ""));
+      render();
+    });
+  }
+
+  async function init() {
+    try {
+      const res = await fetch("/api/visits");
+      if (!res.ok) throw new Error("Request failed: " + res.status);
+      const data = await res.json();
+      state.visits = data.visits || [];
+
+      populateSelect(els.year, uniqueSorted(state.visits.map((v) => String(v.year))));
+      populateSelect(els.country, uniqueSorted(state.visits.map((v) => v.country)));
+      populateSelect(els.city, uniqueSorted(state.visits.map((v) => v.city)));
+      populateSelect(els.borough, uniqueSorted(state.visits.map((v) => v.borough)));
+      populateSelect(els.area, uniqueSorted(state.visits.map((v) => v.area)));
+
+      wireFilters();
+      render();
+    } catch (err) {
+      console.error(err);
+      els.tableContainer.innerHTML = '<div class="error-state">Couldn\'t load visit data. Please refresh, or try again shortly.</div>';
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
