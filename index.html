@@ -90,6 +90,12 @@
     color: var(--accent);
   }
 
+  .lede a {
+    color: var(--accent);
+    text-decoration: none;
+  }
+  .lede a:hover { text-decoration: underline; }
+
   /* --- Filters --- */
   .filters {
     display: grid;
@@ -282,7 +288,7 @@
     <header class="page-head">
       <p class="eyebrow">CoffeeShopNomad</p>
       <h1>Visit Explorer</h1>
-      <p class="lede">A public, read-only slice of every coffee shop I've logged a real visit to — filter by <code>country</code>, <code>city</code>, <code>borough</code>, <code>area</code>, or <code>year</code> to explore.</p>
+      <p class="lede">A public, read-only slice of every coffee shop I've logged a real visit to — filter by <code>country</code>, <code>city</code>, <code>borough</code>, <code>area</code>, or <code>year</code> to explore. <a href="/recent.html">See what's new →</a></p>
     </header>
 
     <section class="filters" id="filters">
